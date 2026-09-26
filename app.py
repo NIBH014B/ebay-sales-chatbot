@@ -6,8 +6,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import streamlit as st  # pyright: ignore[reportMissingImports]
+from streamlit.errors import StreamlitSecretNotFoundError
 
 from agent.sales_agent import AgentChat
+from services.config_service import load_streamlit_secrets as apply_streamlit_secrets
 from services.data_service import DataService
 from services.github_service import RepositoryError, purchase_repository_from_environment, repository_from_environment
 
@@ -15,6 +17,16 @@ from services.github_service import RepositoryError, purchase_repository_from_en
 APP_DIR = Path(__file__).resolve().parent
 BRAND_IMAGE = APP_DIR / "assets" / "buckchi.png"
 load_dotenv(APP_DIR / ".env")
+
+
+def load_streamlit_secrets() -> None:
+    try:
+        apply_streamlit_secrets(st.secrets, os.environ)
+    except StreamlitSecretNotFoundError:
+        pass
+
+
+load_streamlit_secrets()
 os.environ.setdefault("DATA_CACHE_DIR", str(APP_DIR / ".cache" / "github"))
 
 st.set_page_config(

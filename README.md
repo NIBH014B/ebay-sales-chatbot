@@ -34,6 +34,18 @@ GEMINI_MODEL=gemini-2.5-flash
 
 The GitHub URL must be a standard `github.com/owner/repository` URL. `GITHUB_DATA_PATH` optionally limits discovery to a repository subdirectory, such as `Raw Sales Data`; leave it empty to inspect the entire selected branch. `GITHUB_PURCHASE_PRICE_URL` optionally points to a pinned GitHub `blob` URL for a purchase-price workbook in another repository. The app considers CSV, Excel, and JSON files. For local-only development, omit `GITHUB_REPO_URL` and place datasets in `local_data/`.
 
+For Streamlit Community Cloud, add the same uppercase keys to the app's Secrets settings using TOML format. The app reads these values from `st.secrets` when an environment variable is not set. Keep credentials in the host's secret manager; do not commit them.
+
+```toml
+GITHUB_REPO_URL = "https://github.com/owner/repository"
+GITHUB_TOKEN = "your-read-only-token"
+GITHUB_BRANCH = "main"
+GITHUB_DATA_PATH = "Raw Sales Data"
+GITHUB_PURCHASE_PRICE_URL = "https://github.com/org/repository/blob/<commit>/path/Purchase%20Price.xlsx"
+GOOGLE_API_KEY = "your-google-api-key"
+GEMINI_MODEL = "gemini-2.5-flash"
+```
+
 ## Data Expectations
 
 File names are not fixed. Column discovery recognizes common labels for product code/SKU, product name, date, quantity, buying price, selling price, revenue, order ID, and customer. Sales records need a product code, quantity, and a selling-price, revenue, or order field to be identified as sales. Price joins use normalized product codes; conflicting duplicate price mappings are treated as ambiguous and are not used. Profit is reported only where both buying and selling prices are available. Missing matches and source files are included in tool results.

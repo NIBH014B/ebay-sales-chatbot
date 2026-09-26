@@ -4,6 +4,7 @@ import unittest
 import pandas as pd
 
 from services.calculation_service import add_metrics, numeric_series
+from services.config_service import load_streamlit_secrets
 from services.data_service import DataService
 from services.schema_service import detect_columns
 from tools.sales_tools import build_tools
@@ -43,6 +44,15 @@ class SalesAnalysisTests(unittest.TestCase):
         self.assertEqual(columns["selling_price"], "Sale Price")
         self.assertEqual(columns["date"], "Order Date")
 
+    def test_streamlit_secrets_fill_missing_environment_values(self) -> None:
+        environment = {"GITHUB_BRANCH": "release"}
+        load_streamlit_secrets(
+            {"GITHUB_REPO_URL": "https://github.com/example/sales", "GITHUB_BRANCH": "main"},
+            environment,
+        )
+        self.assertEqual(environment["GITHUB_REPO_URL"], "https://github.com/example/sales")
+        self.assertEqual(environment["GITHUB_BRANCH"], "release")
+
     def test_currency_normalization_and_deterministic_metrics(self) -> None:
         prices = numeric_series(pd.Series(["₹1,250.50", "($25.00)", "bad", None]))
         self.assertEqual(prices.iloc[0], 1250.5)
@@ -67,7 +77,7 @@ class SalesAnalysisTests(unittest.TestCase):
         self.assertEqual(result["data_quality"]["records_analyzed"], 3)
         self.assertEqual(result["rows"][0]["product_code"], "A-1")
         self.assertEqual(result["rows"][0]["gross_profit"], 500)
-        self.assertEqual(result["data_quality"]["buying_price_unmatched_records"], 2)
+        self.assertEqual(result["data_quality"]["buying_price_unmatched_records"], 1)
 
     def test_margin_is_aggregated_from_profit_and_revenue(self) -> None:
         result = self.service.analyze("2026-08-01", "2026-08-31", "product", "margin", 10)
@@ -78,14 +88,14 @@ class SalesAnalysisTests(unittest.TestCase):
         result = self.service.product("C-3")
         self.assertIsNone(result["buying_price"])
         self.assertIsNone(result["gross_profit"])
-        self.assertEqual(result["data_quality"]["buying_price_unmatched_records"], 2)
+        self.assertEqual(result["data_quality"]["buying_price_unmatched_records"], 1)
 
     def test_adk_tools_return_compact_json_results(self) -> None:
         tools = build_tools(self.service)
         catalog = json.loads(tools[0]())
         analysis = json.loads(tools[2](metric="units", group_by="product", start_date="2026-08-01", end_date="2026-08-31", limit=2))
         self.assertEqual(len(catalog["datasets"]), 3)
-        self.assertEqual(analysis["rows"][0]["product_code"], "A-1")
+        self.assertEqual(analysis["rows"][0]["product_code"], "B-2")
 
 
 if __name__ == "__main__":

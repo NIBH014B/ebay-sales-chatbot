@@ -1,0 +1,9 @@
+google-adk>=1.0.0
+google-genai>=1.0.0
+openpyxl>=3.1.0
+pandas>=2.2.0
+python-dotenv>=1.0.0
+requests>=2.32.0
+streamlit>=1.37.0
+pytest>=8.0.0
+typesafe-sdk>=0.1.0
